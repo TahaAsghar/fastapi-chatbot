@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot UI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-container {
+            width: 400px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 10px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            max-height: 400px;
+        }
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .message.user {
+            justify-content: flex-end;
+        }
+        .message.user .message-text {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+        .message.bot {
+            justify-content: flex-start;
+        }
+        .message.bot .message-text {
+            background-color: #e9ecef;
+            color: #333333;
+        }
+        .message-text {
+            max-width: 70%;
+            padding: 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .input-container {
+            display: flex;
+            border-top: 1px solid #dddddd;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            font-size: 16px;
+            outline: none;
+        }
+        button {
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            outline: none;
+        }
+        button:disabled {
+            background-color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            ChatBot
+        </div>
+        <div class="messages" id="messages"></div>
+        <div class="input-container">
+            <input type="text" id="message-input" placeholder="Type your message here...">
+            <button onclick="sendMessage()" id="send-button" disabled><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+        const messageInput = document.getElementById("message-input");
+        const sendButton = document.getElementById("send-button");
+
+        messageInput.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        messageInput.addEventListener("input", function() {
+            sendButton.disabled = messageInput.value.trim() === "";
+        });
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message === "") return;
+
+            displayMessage(message, "user");
+            messageInput.value = "";
+            sendButton.disabled = true;
+
+            const response = await fetch("http://127.0.0.1:8000/chat/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ text: message })
+            });
+            const data = await response.json();
+            displayMessage(data.response, "bot");
+        }
+
+        function displayMessage(text, sender) {
+            const messagesDiv = document.getElementById("messages");
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message", sender);
+            const messageTextDiv = document.createElement("div");
+            messageTextDiv.classList.add("message-text");
+            messageTextDiv.textContent = text;
+            messageDiv.appendChild(messageTextDiv);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>
